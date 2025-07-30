@@ -15,9 +15,11 @@ struct mouselockApp: App {
 class AppState: ObservableObject {
     static let shared = AppState();
     
-    @Published var games: Dictionary<String, String> = [
+    @Published var games: Dictionary<String, String> = UserDefaults.standard.dictionary(forKey: "games") as? [String: String] ?? [
         "com.riotgames.LeagueofLegends.GameClient": "1/League of Legends"
-    ];
+    ] {
+        didSet { UserDefaults.standard.set(self.games, forKey: "games") }
+    };
     
     @Published var width: String = UserDefaults.standard.string(forKey: "width") ?? "1920" {
         didSet {UserDefaults.standard.set(self.width, forKey: "width")}
@@ -31,6 +33,21 @@ class AppState: ObservableObject {
     @Published var activegames: Dictionary<String, Bool> = UserDefaults.standard.dictionary(forKey: "activegames") as? [String: Bool] ?? [:] {
         didSet {UserDefaults.standard.set(self.activegames, forKey: "activegames")}
     };
+    
+    /// Add a new app bundle to the watch list.
+    /// - Parameter url: File–URL pointing at an *.app* bundle.
+    func addGame(url: URL) {
+        guard let bundle = Bundle(url: url),
+              let bundleId = bundle.bundleIdentifier else { return }
+        
+        let name = bundle.object(forInfoDictionaryKey: "CFBundleName") as? String
+                   ?? url.deletingPathExtension().lastPathComponent
+        
+        // Update on the main thread so SwiftUI publishes correctly.
+        DispatchQueue.main.async {
+            self.games[bundleId] = name
+        }
+    }
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
