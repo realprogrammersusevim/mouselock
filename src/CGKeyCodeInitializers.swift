@@ -71,7 +71,7 @@ extension CGKeyCode {
 
 }
 
-extension NSEvent.ModifierFlags: Hashable { }
+extension NSEvent.ModifierFlags: @retroactive Hashable { }
 
 extension OptionSet {
     public func first(_ options: Self.Element ...) -> Self.Element? {
